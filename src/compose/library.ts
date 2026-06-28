@@ -67,7 +67,7 @@ float vnoise(vec2 p){
   return mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
 }
 // OPERATORS (uv->uv transforms, chainable) + masks (uv->coverage multiplier).
-vec2 op_polar(vec2 uv){ return vec2(abs(atan(uv.y, uv.x))/PI, length(uv)); } // |angle| folds the branch cut -> seamless (mirrors top/bottom), no hard "line at the left"
+vec2 op_polar(vec2 uv){ float r = length(uv); return vec2(0.5 - 0.5*uv.x/(r + 1e-6), r); } // SEAMLESS radial: angle from cos(θ)=x/r is C1 everywhere — no value-jump wrap (the raw-atan bug: an always-on seam) AND no abs derivative crease (the |atan| bug: a hard horizon line). Mirrors top/bottom (inherent to any seamless polar) but with NO seam line.
 vec2 op_swirl(vec2 uv, float a){ float r=length(uv); float an=a*r; float c=cos(an), s=sin(an); return mat2(c,-s,s,c)*uv; }
 vec2 op_lens(vec2 uv, float a){ float r2=dot(uv,uv); return uv*(1.0 + a*r2); }
 vec2 op_zoom(vec2 uv, float a){ return uv / max(a, 0.01); }
