@@ -88,6 +88,15 @@ export default async function handler(req, res) {
   const { spec, schema = null, image = null, palette = null, caption = false, vary = false, provider = 'cerebras', lastGraph = null } = parsed;
   const prompt = ban(parsed.prompt);
   const lastPrompt = ban(parsed.lastPrompt);
+  const wantTrace = parsed.trace === true;                   // dev inspector: include the full Gemma trace (real prompts + per-step Cerebras timing/tokens)
+  const trace = [];
+  const rec = (phase, label, messages, r, { constrained = false } = {}) => {
+    if (!wantTrace) return;
+    const u = messages.find((m) => m.role === 'user')?.content;
+    const multimodal = Array.isArray(u);
+    const user = multimodal ? `${u.find((c) => c.type === 'text')?.text || ''}\n[image attached]` : (u || '');
+    trace.push({ phase, label, model: p.model, ms: r.ms, tokens: r.ct, tps: r.ctime > 0 ? Math.round(r.ct / r.ctime) : 0, constrained, multimodal, system: messages.find((m) => m.role === 'system')?.content || '', user, raw: r.obj });
+  };
   const p = PROVIDERS[provider] || PROVIDERS.cerebras;
 
   res.setHeader('content-type', 'application/json');
@@ -123,15 +132,19 @@ export default async function handler(req, res) {
     // box before Enter — the style is then generated NATURALLY through the normal text->graph path.
     if (caption && image) {
       const sys = 'You are an AI VJ. Look at this album cover and write ONE short, vivid music-visualizer prompt inspired by it — 4 to 9 words capturing its colours, texture and motion/mood (e.g. "molten gold ink swirling on black"). A plain phrase, no quotes, no preamble. Reply ONLY as {"prompt":"..."}.';
-      const cc = await call([{ role: 'system', content: sys }, { role: 'user', content: [{ type: 'text', text: 'Write a visualizer prompt from this cover art.' }, { type: 'image_url', image_url: { url: image } }] }], 120);
-      return res.end(JSON.stringify({ prompt: String(cc.obj?.prompt || '').slice(0, 120), ms: cc.ms, model: p.model }));
+      const capMsgs = [{ role: 'system', content: sys }, { role: 'user', content: [{ type: 'text', text: 'Write a visualizer prompt from this cover art.' }, { type: 'image_url', image_url: { url: image } }] }];
+      const cc = await call(capMsgs, 120);
+      rec('caption', 'read cover art', capMsgs, cc);
+      return res.end(JSON.stringify({ prompt: String(cc.obj?.prompt || '').slice(0, 120), ms: cc.ms, model: p.model, trace }));
     }
 
     // STEP 1 — interpret + decide (the custom thinking). With a REFERENCE IMAGE, Gemma reads it
     // (multimodal) so the brief is driven by what it sees; the palette is already extracted client-side.
     const s1text = step1User(prompt, lastPrompt, lastGraph) + (image ? imageNote(palette) : '') + (vary ? VARY1 : '');
     const s1content = image ? [{ type: 'text', text: s1text }, { type: 'image_url', image_url: { url: image } }] : s1text;
-    const s1 = await call([{ role: 'system', content: step1Sys(spec) }, { role: 'user', content: s1content }], 700, { type: 'json_object' }, vary ? 0.95 : 0.85);
+    const s1msgs = [{ role: 'system', content: step1Sys(spec) }, { role: 'user', content: s1content }];
+    const s1 = await call(s1msgs, 700, { type: 'json_object' }, vary ? 0.95 : 0.85);
+    rec('interpret', '① interpret + decide', s1msgs, s1);
     const brief = s1.obj || {};
     const diffType = image ? 'new' : (['new', 'refine', 'recolor'].includes(brief.diffType) ? brief.diffType : 'new'); // an image always builds a fresh theme
 
@@ -139,7 +152,7 @@ export default async function handler(req, res) {
     if (diffType === 'recolor' && lastGraph && Array.isArray(brief.deltaPalette) && brief.deltaPalette.length >= 2) {
       return res.end(JSON.stringify({
         brief, recolor: { palette: brief.deltaPalette, paletteAmount: brief.deltaPaletteAmount, post: brief.deltaPost || {} },
-        ms: s1.ms, tps: tps([s1]), tokens: s1.ct, model: p.model, provider, steps: 1,
+        ms: s1.ms, tps: tps([s1]), tokens: s1.ct, model: p.model, provider, steps: 1, trace,
       }));
     }
 
@@ -147,8 +160,10 @@ export default async function handler(req, res) {
     // client supplied one: constrained decoding makes an invalid/garbage graph impossible to emit.
     const s2fmt = schema ? { type: 'json_schema', json_schema: schema } : { type: 'json_object' };
     const s2user = step2User(prompt, brief, diffType, lastGraph) + (vary ? VARY2 : '');
-    const s2 = await call([{ role: 'system', content: step2Sys(spec) }, { role: 'user', content: s2user }], 1300, s2fmt, vary ? 0.9 : 0.85);
-    return res.end(JSON.stringify({ brief, graph: s2.obj, ms: s1.ms + s2.ms, tps: tps([s1, s2]), tokens: s1.ct + s2.ct, model: p.model, provider, steps: 2 }));
+    const s2msgs = [{ role: 'system', content: step2Sys(spec) }, { role: 'user', content: s2user }];
+    const s2 = await call(s2msgs, 1300, s2fmt, vary ? 0.9 : 0.85);
+    rec('emit', '② emit scene-graph', s2msgs, s2, { constrained: !!schema });
+    return res.end(JSON.stringify({ brief, graph: s2.obj, ms: s1.ms + s2.ms, tps: tps([s1, s2]), tokens: s1.ct + s2.ct, model: p.model, provider, steps: 2, trace }));
   } catch (e) {
     res.statusCode = 502;
     return res.end(JSON.stringify({ error: e.message || String(e), detail: e.detail }));

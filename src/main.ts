@@ -7,6 +7,7 @@ import { AudioEngine } from './audio';
 import { THEMES, THEME_LIST, DEFAULT_THEME, themeDirectorSchema } from './themes';
 import { MockDirector, RealDirector, type Director, type DirEvent } from './director';
 import { buildPanel } from './ui/panel';
+import { GemmaInspector } from './ui/gemma';
 import { buildSpec, buildSchema } from './compose/library';
 import { extractPalette, litStops } from './compose/palette';
 import { readAlbumArt } from './albumArt';
@@ -28,6 +29,7 @@ const folderBtn = $<HTMLButtonElement>('folderBtn'), folderWrap = $('folderWrap'
 const imgBtn = $<HTMLButtonElement>('imgBtn'), imgFile = $<HTMLInputElement>('imgFile'), dropZone = $('dropZone');
 const dev = $('dev'), panelEl = $('panel'), themeSel = $<HTMLSelectElement>('themeSel'), providerSel = $<HTMLSelectElement>('providerSel');
 const devlog = $('devlog');
+const gemma = new GemmaInspector($('gemma')); // live "Gemma under the hood" trace in the dev panel
 
 // Mirror console.* into the dev panel's log pane (press D) so logs are visible without browser devtools.
 const fmtArg = (a: unknown) => { if (typeof a === 'string') return a; try { return JSON.stringify(a); } catch { return String(a); } };
@@ -163,7 +165,7 @@ async function composeVisual(text: string, fresh = false, vary = false) {
   try {
     const res = await fetch('/api/compose', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt: text, spec: SPEC, schema: SCHEMA, vary, provider: 'cerebras', lastPrompt: lp, lastGraph: lg }),
+      body: JSON.stringify({ prompt: text, spec: SPEC, schema: SCHEMA, vary, provider: 'cerebras', lastPrompt: lp, lastGraph: lg, trace: true }),
       signal: composeAc.signal,
     });
     const j = await res.json();
@@ -177,6 +179,7 @@ async function composeVisual(text: string, fresh = false, vary = false) {
     hud.textContent = `${j.model} · ${j.ms}ms · ${j.tps || 0} tok/s${autoVJ ? ' · AUTO' : ''}`; // persistent speed readout
     console.log('[compose]', `"${text}" → ${j.model} ${j.ms}ms ${j.tps || 0}tok/s ${j.recolor ? 'recolor' : (j.steps || 2) + '-step'}`);
     const think = j.brief?.interpretation ? `“${j.brief.interpretation}” · ` : ''; // surface the model's reasoning
+    gemma.push({ prompt: text, kind: j.recolor ? 'recolor' : `${j.steps || 2}-step`, trace: j.trace || [], totalMs: j.ms || 0, tps: j.tps || 0 }); // live Gemma trace → dev panel
 
     // RECOLOR — ease colour/post in place; structure preserved, no recompile (the "just change the colour" path).
     if (j.recolor && Array.isArray(j.recolor.palette) && j.recolor.palette.length >= 2) {
@@ -240,11 +243,12 @@ async function composeFromImage(file: Blob, steer = '') {
   try {
     const res = await fetch('/api/compose', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt: steer, spec: SPEC, schema: SCHEMA, image, palette, provider: 'cerebras', lastPrompt: '', lastGraph: null }),
+      body: JSON.stringify({ prompt: steer, spec: SPEC, schema: SCHEMA, image, palette, provider: 'cerebras', lastPrompt: '', lastGraph: null, trace: true }),
     });
     const j = await res.json();
     if (!res.ok || j.error) { setStatus('image compose error', true); console.log('[image]', j.error, j.detail); return; }
     if (/gemma/i.test(j.model)) rateMinMs = PACE_GEMMA;
+    gemma.push({ prompt: steer || '(image)', kind: 'from image', trace: j.trace || [], totalMs: j.ms || 0, tps: j.tps || 0 });
     if (j.graph?.post) j.graph.post.hue = 0;                              // image themes must KEEP the image's colours — the hue post-fx rainbow-cycles them (warm palette -> green)
     if (j.graph && palette.length) {                                      // hybrid: the extracted palette wins over the model's guess
       j.graph.palette = palette;
@@ -267,8 +271,10 @@ async function captionCover(blob: Blob): Promise<string> {
   const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(bmp.width * s)); c.height = Math.max(1, Math.round(bmp.height * s));
   c.getContext('2d')?.drawImage(bmp, 0, 0, c.width, c.height); bmp.close?.();
   try {
-    const res = await fetch('/api/compose', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ image: c.toDataURL('image/jpeg', 0.7), caption: true, provider: 'cerebras' }) });
-    return ((await res.json()).prompt || '').trim();
+    const res = await fetch('/api/compose', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ image: c.toDataURL('image/jpeg', 0.7), caption: true, provider: 'cerebras', trace: true }) });
+    const j = await res.json();
+    gemma.push({ prompt: '(cover art → prompt)', kind: 'caption', trace: j.trace || [], totalMs: j.ms || 0, tps: j.trace?.[0]?.tps || 0 });
+    return (j.prompt || '').trim();
   } catch { return ''; }
 }
 imgBtn.addEventListener('click', () => imgFile.click());
