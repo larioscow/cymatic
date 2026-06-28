@@ -1,0 +1,18 @@
+{
+  "_note": "Hand-authored / known-good reference visuals, to BENCHMARK against gemma-4-31b when it lands. Load any in-browser via window.composeGraph(<graph>). To benchmark: switch to compose mode, feed `prompt` to the model, and compare its generated visual to this reference graph + the screenshot.",
+  "visuals": [
+    {
+      "name": "purple-clouds",
+      "prompt": "soft glowing purple and magenta clouds slowly drifting",
+      "screenshot": "image #3 (soft violet/magenta volumetric clouds, lavender tones with pink wisps)",
+      "graph": {
+        "background": "#1a0828",
+        "layers": [
+          { "prim": "clouds", "params": { "scale": 3, "octaves": 5, "warp": 0.8 }, "color": "#ff5ad0", "blend": "over", "ops": [], "audio": [] }
+        ],
+        "palette": ["#1a0828", "#5a1a8a", "#ff5ad0", "#ffe0ff"],
+        "paletteAmount": 0.85
+      }
+    }
+  ]
+}
