@@ -180,10 +180,13 @@ async function composeVisual(text: string, fresh = false, vary = false) {
 
     // RECOLOR — ease colour/post in place; structure preserved, no recompile (the "just change the colour" path).
     if (j.recolor && Array.isArray(j.recolor.palette) && j.recolor.palette.length >= 2) {
-      const amt = typeof j.recolor.paletteAmount === 'number' ? j.recolor.paletteAmount : 0.85;
+      const cl = (v: number) => Math.max(0, Math.min(1, v));  // recolor skips validate()'s clamp — bound model values here so an out-of-range delta can't blow out the GPU
+      const amt = cl(typeof j.recolor.paletteAmount === 'number' ? j.recolor.paletteAmount : 0.85);
+      const post: any = {};
+      for (const [k, v] of Object.entries(j.recolor.post || {})) if (typeof v === 'number' && Number.isFinite(v)) post[k] = cl(v);
       const stops = litStops(resample4(j.recolor.palette));   // brightness guard: a dark recolor can never go to black
-      engine.updateComposeColor(stops, amt, j.recolor.post || {});
-      if (lastComposeGraph) { lastComposeGraph.palette = stops; lastComposeGraph.paletteAmount = amt; }
+      engine.updateComposeColor(stops, amt, post);
+      if (lastComposeGraph) { lastComposeGraph.palette = stops; lastComposeGraph.paletteAmount = amt; Object.assign(lastComposeGraph.post, post); } // keep client graph in sync with the live post-fx
       setStatus(`${think}recolor · ${j.model} · ${j.ms}ms`, true);
       return;
     }

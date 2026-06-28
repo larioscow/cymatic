@@ -14,7 +14,7 @@ export type SceneGraph = { background: string; colorMode: string; layers: Layer[
 
 const PRIM_MAP: Record<string, typeof PRIMS[number]> = Object.fromEntries(PRIMS.map((p) => [p.name, p]));
 const OP_MAP: Record<string, typeof OPS[number]> = Object.fromEntries(OPS.map((o) => [o.name, o]));
-const num = (v: unknown, fallback: number) => { const n = Number(v); return Number.isFinite(n) ? n : fallback; };
+const num = (v: unknown, fallback: number) => { if (v === null) return fallback; const n = Number(v); return Number.isFinite(n) ? n : fallback; }; // null is "use default" (Number(null)===0 would otherwise slip through finite)
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const isHex = (s: unknown): s is string => typeof s === 'string' && /^#[0-9a-fA-F]{6}$/.test(s);
 // Tolerant: accept "#rrggbb" OR "rrggbb" (models sometimes drop the #) -> normalized "#rrggbb" or null.

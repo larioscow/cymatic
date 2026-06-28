@@ -14,7 +14,9 @@ export default async function handler(req, res) {
 
   let body = '';
   for await (const chunk of req) body += chunk;
-  const prompt = String(JSON.parse(body || '{}').prompt || '').replace(/\bglitchy\b/gi, '').replace(/\s{2,}/g, ' ').trim(); // HARD-FORBID "glitchy"
+  let parsedBody;
+  try { parsedBody = JSON.parse(body || '{}'); } catch { res.statusCode = 400; return res.end('invalid JSON body'); }
+  const prompt = String(parsedBody.prompt || '').replace(/\bglitchy\b/gi, '').replace(/\s{2,}/g, ' ').trim(); // HARD-FORBID "glitchy"
 
   const base = process.env.CEREBRAS_BASE_URL || 'https://api.cerebras.ai/v1';
   const genBody = {

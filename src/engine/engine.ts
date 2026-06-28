@@ -261,6 +261,9 @@ export class Engine {
     return { mat, scene, rt };
   }
 
+  // Free a slot's GPU resources (compiled shader program + render target). geo is shared — never dispose it here.
+  private disposeSlot(slot: Slot) { slot.mat.dispose(); slot.rt.dispose(); }
+
   private adopt(theme: Theme) {
     this.activeTheme = theme;
     this.controls = theme.controls.map((c) => new ControlRuntime(c));
@@ -294,6 +297,7 @@ export class Engine {
 
   crossfadeTo(theme: Theme, transition?: Transition) {
     if (theme.id === this.activeTheme.id) return;
+    if (this.prev) this.disposeSlot(this.prev); // an interrupted crossfade still holds the previous outgoing slot — free it before it's orphaned
     this.prev = this.cur;           // outgoing slot keeps its frozen u_k, stays live via time/audio
     this.cur = this.makeSlot(theme);
     this.adopt(theme);              // sets fxTarget to the new theme's fx (the transition's "ending")
@@ -516,6 +520,6 @@ export class Engine {
     this.compMat.uniforms.uMix.value = mix;
     this.composer.render();
 
-    if (this.xfade >= 1 && this.prev) { this.prev.rt.dispose(); this.prev = null; }
+    if (this.xfade >= 1 && this.prev) { this.disposeSlot(this.prev); this.prev = null; }
   }
 }

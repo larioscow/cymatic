@@ -24,7 +24,8 @@ export default async function handler(req, res) {
 
   let body = '';
   for await (const chunk of req) body += chunk;
-  const parsed = JSON.parse(body || '{}');
+  let parsed;
+  try { parsed = JSON.parse(body || '{}'); } catch { res.setHeader('content-type', 'application/json'); res.statusCode = 400; return res.end(JSON.stringify({ error: 'invalid JSON body' })); }
   const { schema, provider = 'cerebras', frame } = parsed;
   const prompt = String(parsed.prompt || '').replace(/\bglitchy\b/gi, '').replace(/\s{2,}/g, ' ').trim(); // HARD-FORBID "glitchy"
   const p = PROVIDERS[provider] || PROVIDERS.cerebras;
@@ -38,7 +39,7 @@ Rules: include only fields you want to change; "theme" must be one of the enum; 
 
   const userContent = frame
     ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: frame } }]
-    : prompt;
+    : (prompt || 'an abstract ambient visual'); // a prompt that stripped to empty (e.g. just "glitchy") must not send an empty user message
 
   const t0 = Date.now();
   let upstream;

@@ -82,9 +82,12 @@ export default async function handler(req, res) {
 
   let body = '';
   for await (const chunk of req) body += chunk;
-  const parsed = JSON.parse(body || '{}');
-  const { spec, schema = null, image = null, palette = null, caption = false, vary = false, provider = 'cerebras', lastPrompt = '', lastGraph = null } = parsed;
-  const prompt = String(parsed.prompt || '').replace(/\bglitchy\b/gi, '').replace(/\s{2,}/g, ' ').trim(); // HARD-FORBID "glitchy" — strip it from any prompt (also covers image-steer, sent as prompt)
+  let parsed;
+  try { parsed = JSON.parse(body || '{}'); } catch { res.setHeader('content-type', 'application/json'); res.statusCode = 400; return res.end(JSON.stringify({ error: 'invalid JSON body' })); }
+  const ban = (s) => String(s || '').replace(/\bglitchy\b/gi, '').replace(/\s{2,}/g, ' ').trim(); // HARD-FORBID "glitchy" in EVERY prompt field (current prompt + image-steer + lastPrompt)
+  const { spec, schema = null, image = null, palette = null, caption = false, vary = false, provider = 'cerebras', lastGraph = null } = parsed;
+  const prompt = ban(parsed.prompt);
+  const lastPrompt = ban(parsed.lastPrompt);
   const p = PROVIDERS[provider] || PROVIDERS.cerebras;
 
   res.setHeader('content-type', 'application/json');
