@@ -48,6 +48,7 @@
   #app.gen #topbar, #app.gen #botbar { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
   #topPill { width: 100%; max-width: 760px; display: flex; align-items: center; gap: 16px; padding: 9px 16px 9px 9px; }
+  #scrub { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 16px; }
   #songTitle { flex: 0 1 auto; min-width: 0; font-size: 13.5px; font-weight: 500; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #time, #total { flex: 0 0 auto; font-size: 11px; letter-spacing: .05em; width: 40px; }
   #time { color: rgba(26,26,24,.7); text-align: right; }
@@ -161,6 +162,22 @@
   /* contrast safety net: keep text legible at the panels' translucent edges over any background */
   #promptInput, #refineInput, #songTitle, #time, #total { text-shadow: 0 1px 2px rgba(255,253,250,.45); }
   body[data-ground="dark"] #promptInput, body[data-ground="dark"] #refineInput, body[data-ground="dark"] #songTitle, body[data-ground="dark"] #time, body[data-ground="dark"] #total { text-shadow: 0 1px 3px rgba(0,0,0,.75); }
+  /* ---- mobile ---- */
+  @media (max-width: 640px) {
+    #topbar { top: 12px; padding: 0 10px; }
+    #topPill { flex-wrap: wrap; gap: 8px; row-gap: 9px; max-width: 100%; padding: 8px 10px; }
+    #songTitle { flex: 1 1 auto; font-size: 12.5px; }
+    #scrub { order: 9; flex: 1 1 100%; gap: 10px; }   /* full-width scrubber drops to its own row */
+    #seek { height: 24px; }
+
+    #botbar { bottom: 14px; padding: 0 10px; }
+    #botRow { max-width: 100%; gap: 8px; align-items: flex-end; }
+    #botPill { flex-wrap: wrap; row-gap: 8px; padding: 8px 14px; }
+    #refineInput { flex: 1 1 100%; font-size: 15px; }  /* input full width; action buttons wrap beneath */
+
+    #dev { width: calc(100vw - 24px); right: 12px; top: 12px; max-height: 72vh; }
+    #devhint { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -202,9 +219,11 @@
         <button id="playBtn" class="iconbtn solidbtn" style="width:42px;height:42px;">
           <svg id="playIcon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>
         </button>
-        <div id="time">0:00</div>
-        <div id="seek"><div class="track"></div><div id="fill"></div><div id="handle"></div></div>
-        <div id="total">0:00</div>
+        <div id="scrub">
+          <div id="time">0:00</div>
+          <div id="seek"><div class="track"></div><div id="fill"></div><div id="handle"></div></div>
+          <div id="total">0:00</div>
+        </div>
         <button id="loopBtn" class="iconbtn" title="Loop the track" style="width:36px;height:36px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         </button>
