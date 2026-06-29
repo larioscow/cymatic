@@ -12,8 +12,10 @@ import { buildSpec, buildSchema } from './compose/library';
 import { extractPalette, litStops } from './compose/palette';
 import { readAlbumArt } from './albumArt';
 import { validate, makeComposeTheme, resample4, type SceneGraph } from './compose/codegen';
+import { inject } from '@vercel/analytics';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+inject(); // Vercel Web Analytics — page views on the deployed site (no-op in local dev)
 const app = $('app');
 const canvas = $<HTMLCanvasElement>('view');
 const fileEl = $<HTMLInputElement>('file');
