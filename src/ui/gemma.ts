@@ -52,7 +52,7 @@ export class GemmaInspector {
   private card(c: GemmaCall) {
     const card = el('div', 'gcall');
     const head = el('div', 'ghead');
-    head.append(el('span', 'gbolt', '⚡'), el('span', 'gmodel', c.trace[0]?.model || 'gemma'));
+    head.append(el('span', 'gmodel', c.trace[0]?.model || 'gemma'));
     head.append(el('span', 'gspeed', `${c.totalMs}ms · ${c.tps} tok/s`));
     head.append(el('span', 'gkind', c.kind));
     card.append(head);
@@ -65,8 +65,8 @@ export class GemmaInspector {
     const wrap = el('div', 'gstep');
     const row = el('div', 'gsteprow');
     row.append(el('span', 'glabel', s.label));
-    if (s.constrained) row.append(el('span', 'gbadge gbadge-lock', '🔒 constrained'));
-    if (s.multimodal) row.append(el('span', 'gbadge gbadge-eye', '👁 multimodal'));
+    if (s.constrained) row.append(el('span', 'gbadge', 'constrained'));
+    if (s.multimodal) row.append(el('span', 'gbadge', 'vision'));
     wrap.append(row);
     wrap.append(el('div', 'gmeta', `${s.ms}ms · ${s.tokens} tok · ${s.tps} tok/s`));
 

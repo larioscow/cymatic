@@ -61,8 +61,10 @@
   #botRow { width: 100%; max-width: 680px; display: flex; align-items: center; gap: 12px; }
   #botPill { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 22px; }
   #refineInput { flex: 1 1 auto; background: none; border: none; font-size: 14px; line-height: 1.45; letter-spacing: .01em; padding: 8px 0; min-width: 0; resize: none; overflow-y: auto; max-height: 78px; box-sizing: border-box; display: block; }
-  .iconbtn.on { background: linear-gradient(180deg, rgba(46,46,42,.95), rgba(20,20,18,.96)); color: #e9e7e2; border-color: rgba(255,255,255,.2); }
-  body[data-ground="dark"] .iconbtn.on { background: linear-gradient(180deg, rgba(246,243,235,.96), rgba(228,223,212,.95)); color: #08080a; }
+  /* active state = solid inverted button; reset the light-glass insets the base .iconbtn carries, else
+     its bright white inner highlights bleed over the dark fill and read as a broken/glitchy ring. */
+  .iconbtn.on { background: linear-gradient(180deg, rgba(46,46,42,.95), rgba(20,20,18,.96)); color: #e9e7e2; border: none; box-shadow: 0 6px 16px -8px rgba(40,38,34,.5), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -2px 4px rgba(0,0,0,.32); }
+  body[data-ground="dark"] .iconbtn.on { background: linear-gradient(180deg, rgba(246,243,235,.96), rgba(228,223,212,.95)); color: #08080a; border: none; box-shadow: 0 6px 16px -8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 4px rgba(0,0,0,.12); }
 
   /* ---- saved-presets folder (popover anchored to the folder button) ---- */
   #folderWrap { position: relative; flex: 0 0 auto; }
@@ -82,49 +84,54 @@
     backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); font-size: 15px; letter-spacing: .14em; text-transform: uppercase; }
   #dropZone.show { display: flex; }
 
-  /* ---- hidden dev panel (press D) ---- */
+  /* ---- hidden dev panel (press D) — plain monochrome, deliberately un-flashy ---- */
   #dev { position: absolute; right: 14px; top: 14px; z-index: 5; width: 340px; max-height: 88vh; overflow: auto; display: none; flex-direction: column; gap: 8px;
-    background: rgba(20,20,18,.86); color: #cfe; border: 1px solid rgba(120,200,255,.25); border-radius: 10px; padding: 12px; backdrop-filter: blur(6px); font-size: 11px; }
+    background: rgba(20,20,20,.92); color: #d2d2d2; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 12px; backdrop-filter: blur(6px); font-size: 11px; }
   #dev.show { display: flex; }
   #dev .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  #dev select { background: rgba(0,0,0,.3); color: #bdf; border: 1px solid rgba(120,200,255,.3); border-radius: 6px; padding: 4px; font-family: inherit; }
-  #dev .ptitle { font-size: 11px; letter-spacing: .12em; color: #7fe7ff; text-transform: uppercase; margin-top: 4px; }
+  #dev select { background: rgba(255,255,255,.06); color: #d2d2d2; border: 1px solid rgba(255,255,255,.16); border-radius: 5px; padding: 4px; font-family: inherit; }
+  #dev .ptitle { font-size: 10px; letter-spacing: .14em; color: #8a8a8a; text-transform: uppercase; margin-top: 4px; }
   .knob { display: grid; grid-template-columns: 80px 1fr 30px; align-items: center; gap: 6px; }
   .knob span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .knob em { font-style: normal; color: #8ab; text-align: right; }
-  .knob input[type=range] { width: 100%; accent-color: #7fe7ff; }
+  .knob em { font-style: normal; color: #9a9a9a; text-align: right; }
+  .knob input[type=range] { width: 100%; accent-color: #9a9a9a; }
   #devlog { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; font-size: 10px; line-height: 1.4; }
   #devlog:empty::after { content: 'logs appear here…'; opacity: .4; }
-  #devlog .lg { white-space: pre-wrap; word-break: break-word; color: #b8ccdd; }
+  #devlog .lg { white-space: pre-wrap; word-break: break-word; color: #b0b0b0; }
   #devlog .lg .t { opacity: .45; }
-  #devlog .lg-warn { color: #ffd479; }
-  #devlog .lg-error { color: #ff8a8a; }
-  /* ---- Gemma inspector (under-the-hood reasoning trace) ---- */
+  #devlog .lg-warn { color: #d9c08a; }
+  #devlog .lg-error { color: #d99090; }
+  /* ---- Gemma inspector (under-the-hood reasoning trace) — plain monochrome ---- */
   #gemma { display: flex; flex-direction: column; gap: 7px; }
   #gemma .gempty { opacity: .45; font-size: 10px; padding: 2px 0 4px; }
-  .gcall { border: 1px solid rgba(120,200,255,.18); border-radius: 8px; padding: 7px 8px; background: rgba(0,0,0,.22); display: flex; flex-direction: column; gap: 4px; }
-  .gcall:first-of-type { border-color: rgba(127,231,255,.5); box-shadow: 0 0 0 1px rgba(127,231,255,.12); }  /* newest pops */
+  .gcall { border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 7px 8px; background: rgba(255,255,255,.03); display: flex; flex-direction: column; gap: 4px; }
+  .gcall:first-of-type { border-color: rgba(255,255,255,.28); }  /* newest is brighter-bordered */
   .ghead { display: flex; align-items: center; gap: 6px; font-size: 11px; }
-  .gbolt { color: #ffd479; }
-  .gmodel { color: #7fe7ff; font-weight: 600; }
-  .gspeed { color: #9fe8c0; margin-left: auto; font-variant-numeric: tabular-nums; }
-  .gkind { color: #8ab; text-transform: uppercase; letter-spacing: .08em; font-size: 9px; border: 1px solid rgba(136,170,187,.4); border-radius: 4px; padding: 1px 4px; }
-  .gprompt { color: #e8eef5; font-size: 11px; opacity: .9; }
-  .gstep { display: flex; flex-direction: column; gap: 3px; padding: 5px 0 2px; border-top: 1px dashed rgba(120,200,255,.14); }
+  .gmodel { color: #e0e0e0; font-weight: 600; }
+  .gspeed { color: #a8a8a8; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .gkind { color: #8a8a8a; text-transform: uppercase; letter-spacing: .08em; font-size: 9px; border: 1px solid rgba(255,255,255,.18); border-radius: 4px; padding: 1px 4px; }
+  .gprompt { color: #d8d8d8; font-size: 11px; opacity: .9; }
+  .gstep { display: flex; flex-direction: column; gap: 3px; padding: 5px 0 2px; border-top: 1px solid rgba(255,255,255,.08); }
   .gsteprow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .glabel { color: #cfe; font-weight: 600; font-size: 11px; }
-  .gbadge { font-size: 9px; border-radius: 4px; padding: 1px 4px; white-space: nowrap; }
-  .gbadge-lock { color: #ffd479; border: 1px solid rgba(255,212,121,.45); }
-  .gbadge-eye { color: #c9a7ff; border: 1px solid rgba(201,167,255,.45); }
-  .gmeta { color: #9fe8c0; font-size: 10px; font-variant-numeric: tabular-nums; }
-  .gthought { color: #fff; font-size: 11px; line-height: 1.4; border-left: 2px solid #7fe7ff; padding-left: 6px; }
-  .gapproach { color: #b8ccdd; font-size: 10px; line-height: 1.4; }
-  .gdecide { color: #8ab; font-size: 10px; letter-spacing: .04em; }
+  .glabel { color: #d2d2d2; font-weight: 600; font-size: 11px; }
+  .gbadge { font-size: 9px; border-radius: 3px; padding: 1px 4px; white-space: nowrap; color: #9a9a9a; border: 1px solid rgba(255,255,255,.18); }
+  .gmeta { color: #9a9a9a; font-size: 10px; font-variant-numeric: tabular-nums; }
+  .gthought { color: #e8e8e8; font-size: 11px; line-height: 1.4; border-left: 2px solid rgba(255,255,255,.3); padding-left: 6px; }
+  .gapproach { color: #aaa; font-size: 10px; line-height: 1.4; }
+  .gdecide { color: #888; font-size: 10px; letter-spacing: .04em; }
   .graw { font-size: 10px; }
-  .graw > summary { cursor: pointer; color: #7fb6d8; list-style: none; padding: 1px 0; }
+  .graw > summary { cursor: pointer; color: #9a9a9a; list-style: none; padding: 1px 0; }
   .graw > summary::-webkit-details-marker { display: none; }
-  .graw[open] > summary { color: #7fe7ff; }
-  .graw pre { margin: 2px 0 0; max-height: 180px; overflow: auto; background: rgba(0,0,0,.4); border-radius: 5px; padding: 6px; white-space: pre-wrap; word-break: break-word; color: #aebfcf; font-size: 9.5px; line-height: 1.35; }
+  .graw[open] > summary { color: #cfcfcf; }
+  .graw pre { margin: 2px 0 0; max-height: 180px; overflow: auto; background: rgba(0,0,0,.35); border-radius: 4px; padding: 6px; white-space: pre-wrap; word-break: break-word; color: #a8a8a8; font-size: 9.5px; line-height: 1.35; }
+  /* ---- "add a track" hint bubble (empty-state Enter) ---- */
+  #addTrackHint { position: fixed; z-index: 40; transform: translate(-50%, -100%); padding: 9px 14px; border-radius: 12px;
+    background: #1a1a18; color: #f3f1ec; font-size: 12.5px; letter-spacing: .01em; white-space: nowrap;
+    box-shadow: 0 10px 28px -10px rgba(40,38,34,.55); pointer-events: none; opacity: 0; visibility: hidden;
+    transition: opacity .22s ease, transform .22s cubic-bezier(.5,1.6,.5,1); }
+  #addTrackHint.show { opacity: 1; visibility: visible; transform: translate(-50%, calc(-100% - 8px)); }
+  #addTrackHint::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 12px; height: 12px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+  body[data-ground="dark"] #addTrackHint { background: #f6f3eb; color: #08080a; box-shadow: 0 10px 28px -10px rgba(0,0,0,.6); }
   #devhint { position: absolute; left: 14px; bottom: 8px; font-size: 9px; letter-spacing: .2em; color: rgba(26,26,24,.3); }
   #dirstat { position: absolute; right: 14px; bottom: 8px; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,24,.42); opacity: 0; transition: opacity .35s ease; pointer-events: none; }
   #hud { position: absolute; right: 14px; bottom: 22px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,26,24,.5); font-variant-numeric: tabular-nums; pointer-events: none; }
@@ -182,6 +189,7 @@
       </div>
       <input id="file" type="file" accept="audio/*" style="display:none;" />
     </div>
+    <div id="addTrackHint">Add an audio track, it’s worth it ;)</div>
 
     <!-- GENERATE CHROME -->
     <div id="chrome">
@@ -196,6 +204,12 @@
         <div id="time">0:00</div>
         <div id="seek"><div class="track"></div><div id="fill"></div><div id="handle"></div></div>
         <div id="total">0:00</div>
+        <button id="loopBtn" class="iconbtn" title="Loop the track" style="width:36px;height:36px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </button>
+        <button id="fsBtn" class="iconbtn" title="Fullscreen" style="width:36px;height:36px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        </button>
       </div></div>
       <div id="botbar"><div id="botRow">
         <div id="botPill" class="pill">
@@ -206,9 +220,7 @@
           <button id="rerollBtn" class="iconbtn" title="Re-roll — a fresh take on the same prompt" style="width:38px;height:38px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
           </button>
-          <button id="autoBtn" class="iconbtn" title="Auto-VJ — regenerate on each song section" style="width:38px;height:38px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 13V9M9.5 17V5M14.5 15V7M19 12V8"/></svg>
-          </button>
+          <button id="autoBtn" class="iconbtn" title="Auto-VJ — regenerate on each song section (Automatic)" style="width:38px;height:38px;font-size:16px;font-weight:600;line-height:1;">A</button>
           <button id="saveBtn" class="iconbtn" title="Save the current visual as a preset" style="width:38px;height:38px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5l2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.8l-5.2 2.7 1-5.75-4.2-4.1 5.8-.85z"/></svg>
           </button>
@@ -224,11 +236,11 @@
 
     <!-- DEV PANEL (press D) -->
     <div id="dev">
-      <div class="row"><span>theme</span><select id="themeSel"></select></div>
-      <div class="row"><span>director</span><select id="providerSel"><option value="mock">mock (offline)</option><option value="cerebras">cerebras</option><option value="compare">compare</option><option value="compose" selected>compose (gen)</option></select></div>
+      <!-- theme/director selectors removed from the dev window; kept hidden so the compose pipeline (always 'compose') still resolves them -->
+      <div hidden><select id="themeSel"></select><select id="providerSel"><option value="compose" selected>compose</option></select></div>
       <div id="gemma"></div>
       <div id="panel"></div>
-      <div class="row" style="margin-top:4px;"><span class="ptitle" style="margin:0;">logs</span><button id="logClear" style="background:rgba(0,0,0,.3);color:#bdf;border:1px solid rgba(120,200,255,.3);border-radius:5px;font-size:10px;padding:2px 7px;cursor:pointer;">clear</button></div>
+      <div class="row" style="margin-top:4px;"><span class="ptitle" style="margin:0;">logs</span><button id="logClear" style="background:rgba(255,255,255,.06);color:#cfcfcf;border:1px solid rgba(255,255,255,.18);border-radius:5px;font-size:10px;padding:2px 7px;cursor:pointer;">clear</button></div>
       <div id="devlog"></div>
     </div>
     <div id="devhint">PRESS D FOR DEV</div>

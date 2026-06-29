@@ -137,6 +137,8 @@ export class AudioEngine {
   async play() { await this.ctx.resume(); return this.el.play(); }
   pause() { this.el.pause(); }
   toggle() { if (this.el.paused) this.play(); else this.pause(); }
+  setLoop(v: boolean) { this.el.loop = v; }
+  get looping() { return this.el.loop; }
   seekFrac(frac: number) { if (this.el.duration) this.el.currentTime = Math.max(0, Math.min(1, frac)) * this.el.duration; }
   onEnded(cb: () => void) { this.el.addEventListener('ended', cb); }
   get playing() { return !this.el.paused; }

@@ -144,7 +144,7 @@ export default async function handler(req, res) {
     const s1content = image ? [{ type: 'text', text: s1text }, { type: 'image_url', image_url: { url: image } }] : s1text;
     const s1msgs = [{ role: 'system', content: step1Sys(spec) }, { role: 'user', content: s1content }];
     const s1 = await call(s1msgs, 700, { type: 'json_object' }, vary ? 0.95 : 0.85);
-    rec('interpret', '① interpret + decide', s1msgs, s1);
+    rec('interpret', '1 · interpret + decide', s1msgs, s1);
     const brief = s1.obj || {};
     const diffType = image ? 'new' : (['new', 'refine', 'recolor'].includes(brief.diffType) ? brief.diffType : 'new'); // an image always builds a fresh theme
 
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
     const s2user = step2User(prompt, brief, diffType, lastGraph) + (vary ? VARY2 : '');
     const s2msgs = [{ role: 'system', content: step2Sys(spec) }, { role: 'user', content: s2user }];
     const s2 = await call(s2msgs, 1300, s2fmt, vary ? 0.9 : 0.85);
-    rec('emit', '② emit scene-graph', s2msgs, s2, { constrained: !!schema });
+    rec('emit', '2 · emit scene-graph', s2msgs, s2, { constrained: !!schema });
     return res.end(JSON.stringify({ brief, graph: s2.obj, ms: s1.ms + s2.ms, tps: tps([s1, s2]), tokens: s1.ct + s2.ct, model: p.model, provider, steps: 2, trace }));
   } catch (e) {
     res.statusCode = 502;

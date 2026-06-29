@@ -22,6 +22,7 @@ const promptInput = $<HTMLInputElement>('promptInput');
 const genBtn = $<HTMLButtonElement>('genBtn');
 const songTitle = $('songTitle');
 const playBtn = $('playBtn'), playIcon = $('playIcon');
+const loopBtn = $<HTMLButtonElement>('loopBtn'), fsBtn = $<HTMLButtonElement>('fsBtn');
 const timeEl = $('time'), totalEl = $('total'), fill = $('fill'), handle = $('handle'), seek = $('seek');
 const refineInput = $<HTMLInputElement>('refineInput');
 const rerollBtn = $<HTMLButtonElement>('rerollBtn'), autoBtn = $<HTMLButtonElement>('autoBtn'), saveBtn = $<HTMLButtonElement>('saveBtn');
@@ -378,9 +379,9 @@ function requestDirect(text: string) {
 // ---- prompt screen ----
 $('pickBtn').addEventListener('click', () => fileEl.click());
 let hasFile = false;
-genBtn.disabled = true; // Enter is gated on having an uploaded track
+// genBtn stays enabled — with no track, pressing it (or Enter) shows the "add a track" nudge (see generate()).
 
-$('clearFile').addEventListener('click', () => { hasFile = false; genBtn.disabled = true; audio.pause(); fileChip.classList.remove('show'); stagedCover = null; seededFromCover = false; });
+$('clearFile').addEventListener('click', () => { hasFile = false; audio.pause(); fileChip.classList.remove('show'); stagedCover = null; seededFromCover = false; });
 fileEl.addEventListener('change', async () => {
   const f = fileEl.files?.[0];
   if (!f) return;
@@ -388,7 +389,6 @@ fileEl.addEventListener('change', async () => {
   fileChip.classList.add('show');
   songTitle.textContent = titleFrom(f.name);
   hasFile = true;
-  genBtn.disabled = false;            // a track is staged — Enter is now allowed
   clearMarks();   // fresh track -> fresh scene timeline
   stagedCover = await readAlbumArt(f).catch(() => null);   // embedded cover art (mp3 ID3)
   try { await audio.load(f); } catch (e) { console.error('[audio]', e); }
@@ -405,9 +405,21 @@ fileEl.addEventListener('change', async () => {
   if (app.classList.contains('gen')) engine.setLook({ speed: bpmToSpeed(audio.bpm) }); // BPM may resolve after Enter
 });
 
+let hintTimer = 0;
+// No track yet + Enter/→ → point a bubble at the music icon instead of silently doing nothing.
+function showAddTrackBubble() {
+  const r = $('pickBtn').getBoundingClientRect();
+  const hint = $('addTrackHint');
+  hint.style.left = `${r.left + r.width / 2}px`;
+  hint.style.top = `${r.top - 10}px`;
+  hint.classList.add('show');
+  clearTimeout(hintTimer);
+  hintTimer = window.setTimeout(() => hint.classList.remove('show'), 3800);
+}
+
 // advance to the player — ONLY with a track loaded. Plays within the Enter gesture (autoplay-safe).
 function generate() {
-  if (!hasFile) return;
+  if (!hasFile) { showAddTrackBubble(); return; }
   app.classList.add('gen');
   engine.setLook({ speed: bpmToSpeed(audio.bpm) }); // 0.1 idle -> ramp motion to the track's tempo
   audio.play();
@@ -431,6 +443,9 @@ promptInput.addEventListener('input', () => { promptEdited = true; }); // distin
 // ---- generate chrome ----
 $('resetBtn').addEventListener('click', () => { app.classList.remove('gen'); audio.pause(); engine.setLook({ speed: 0.1 }); clearMarks(); }); // back to glacial idle
 playBtn.addEventListener('click', () => audio.toggle());
+loopBtn.addEventListener('click', () => { const on = !audio.looping; audio.setLoop(on); loopBtn.classList.toggle('on', on); }); // repeat the track at end
+fsBtn.addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); });
+document.addEventListener('fullscreenchange', () => fsBtn.classList.toggle('on', !!document.fullscreenElement));
 seek.addEventListener('click', (e) => { const r = seek.getBoundingClientRect(); audio.seekFrac((e.clientX - r.left) / r.width); resyncSections(); });
 
 // Sculpt: steer the visuals live as you type (no submit button on the player)
