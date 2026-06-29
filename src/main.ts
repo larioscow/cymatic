@@ -28,6 +28,7 @@ const loopBtn = $<HTMLButtonElement>('loopBtn'), fsBtn = $<HTMLButtonElement>('f
 const timeEl = $('time'), totalEl = $('total'), fill = $('fill'), handle = $('handle'), seek = $('seek');
 const refineInput = $<HTMLInputElement>('refineInput');
 const rerollBtn = $<HTMLButtonElement>('rerollBtn'), autoBtn = $<HTMLButtonElement>('autoBtn'), saveBtn = $<HTMLButtonElement>('saveBtn');
+const diceBtn = $<HTMLButtonElement>('diceBtn');
 const folderBtn = $<HTMLButtonElement>('folderBtn'), folderWrap = $('folderWrap'), presetPanel = $('presetPanel');
 const imgBtn = $<HTMLButtonElement>('imgBtn'), imgFile = $<HTMLInputElement>('imgFile'), dropZone = $('dropZone');
 const dev = $('dev'), panelEl = $('panel'), themeSel = $<HTMLSelectElement>('themeSel'), providerSel = $<HTMLSelectElement>('providerSel');
@@ -357,9 +358,42 @@ function renderPresets() {
 }
 
 // compose-mode actions shared by the on-screen buttons AND the keyboard shortcuts
+// Curated, high-performing prompts (the vocabulary the model renders well). The dice picks one,
+// injects it into the steer box, and fires a fresh generation — an instant "show me something good".
+const PROMPTS = [
+  'black hole bending light around a dark core',
+  'soft pastel clouds drifting at dawn, dreamy glow',
+  'neon rain falling through a dark alley',
+  'molten gold ink swirling on black',
+  'electric storm with forked lightning',
+  'deep sea bioluminescent jellyfish glowing in the dark',
+  'psychedelic kaleidoscope mandala',
+  'synthwave grid racing to a neon horizon',
+  'swirling galaxy with a bright core',
+  'aurora borealis over a dark northern sky',
+  'molten lava flowing, deep reds and orange',
+  'matrix code rain, green on black',
+  'cosmic nebula, purple and teal gas',
+  'concentric sonar ripples in the deep',
+  'op-art moire interference in black and white',
+  'warm campfire embers rising into the night',
+  'liquid chrome metaballs, glossy and slow',
+  'tunnel of light racing forward at hyperspeed',
+  'cracked desert earth under a harsh sun',
+  'sumi-e ink wash, a single calm brushstroke',
+];
+let lastDice = -1;
+function randomPrompt() {
+  let i; do { i = Math.floor(Math.random() * PROMPTS.length); } while (PROMPTS.length > 1 && i === lastDice);
+  lastDice = i;
+  const p = PROMPTS[i];
+  refineInput.value = p; autoGrow(refineInput); promptEdited = true;
+  composeVisual(p, true); // fresh take on the hand-picked prompt
+}
 function reroll() { const t = lastComposePrompt || refineInput.value.trim(); if (t) composeVisual(t, true); }
 function toggleAuto() { autoVJ = !autoVJ; autoBtn.classList.toggle('on', autoVJ); setStatus(autoVJ ? 'auto-VJ ON' : 'auto-VJ off', true); }
 rerollBtn.addEventListener('click', reroll);
+diceBtn.addEventListener('click', randomPrompt);
 autoBtn.addEventListener('click', toggleAuto);
 saveBtn.addEventListener('click', (e) => { e.stopPropagation(); savePreset(); });   // stopProp so the save-opened panel survives the outside-click close
 folderBtn.addEventListener('click', (e) => { e.stopPropagation(); presetPanel.classList.toggle('show'); });

@@ -61,7 +61,7 @@
   body[data-ground="dark"] #seek .mark { background: #fff; opacity: .6; }
 
   #botRow { width: 100%; max-width: 680px; display: flex; align-items: center; gap: 12px; }
-  #botPill { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 22px; }
+  #botPill { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
   #refineInput { flex: 1 1 auto; background: none; border: none; font-size: 14px; line-height: 1.45; letter-spacing: .01em; padding: 8px 0; min-width: 0; resize: none; overflow-y: auto; max-height: 78px; box-sizing: border-box; display: block; }
   /* active state = solid inverted button; reset the light-glass insets the base .iconbtn carries, else
      its bright white inner highlights bleed over the dark fill and read as a broken/glitchy ring. */
@@ -173,7 +173,7 @@
     #botbar { bottom: 14px; padding: 0 10px; }
     #botRow { max-width: 100%; gap: 8px; align-items: flex-end; }
     #botPill { flex-wrap: wrap; row-gap: 8px; padding: 8px 14px; }
-    #refineInput { flex: 1 1 100%; font-size: 15px; }  /* input full width; action buttons wrap beneath */
+    #refineInput { flex: 1 1 100%; font-size: 15px; order: -1; }  /* input full width on top; dice + action buttons wrap beneath */
 
     #dev { width: calc(100vw - 24px); right: 12px; top: 12px; max-height: 72vh; }
     #devhint { display: none; }
@@ -233,6 +233,9 @@
       </div></div>
       <div id="botbar"><div id="botRow">
         <div id="botPill" class="pill">
+          <button id="diceBtn" class="iconbtn" title="Surprise me · a hand-picked prompt" style="width:38px;height:38px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.25" fill="currentColor" stroke="none"/></svg>
+          </button>
           <textarea id="refineInput" rows="1" placeholder="Steer the visuals…" autocomplete="off"></textarea>
           <button id="imgBtn" class="iconbtn" title="Theme from a reference image" style="width:38px;height:38px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-2-2-4 4"/></svg>
