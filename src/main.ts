@@ -394,6 +394,48 @@ function reroll() { const t = lastComposePrompt || refineInput.value.trim(); if 
 function toggleAuto() { autoVJ = !autoVJ; autoBtn.classList.toggle('on', autoVJ); setStatus(autoVJ ? 'auto-VJ ON' : 'auto-VJ off', true); }
 rerollBtn.addEventListener('click', reroll);
 diceBtn.addEventListener('click', randomPrompt);
+
+// Speed test: run the SAME prompt on Cerebras (Gemma) and a GPU provider, show the latency + tok/s gap.
+// Benchmark only — does not render. The GPU side needs COMPARE_API_KEY (OpenAI-compatible) in .env.
+type SpeedRes = { ms?: number; tps?: number; model?: string; error?: string };
+const speedBtn = $<HTMLButtonElement>('speedBtn'), speedResult = $('speedResult');
+async function runSpeedTest() {
+  const prompt = (lastComposePrompt || refineInput.value || promptInput.value || 'a swirling neon galaxy with a bright core and heavy bloom').trim();
+  speedBtn.disabled = true; speedBtn.textContent = 'running…';
+  speedResult.className = ''; speedResult.textContent = `testing “${prompt.slice(0, 38)}”…`;
+  const call = async (provider: string): Promise<SpeedRes> => {
+    try {
+      const res = await fetch('/api/compose', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ prompt, spec: SPEC, schema: null, provider, lastPrompt: '', lastGraph: null }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.error) return { error: j.error || `http ${res.status}` };
+      return { ms: j.ms, tps: j.tps || 0, model: j.model };
+    } catch (e) { return { error: String(e) }; }
+  };
+  const [cb, gpu] = await Promise.all([call('cerebras'), call('compare')]);
+  const span = (cls: string, text: string) => { const e = document.createElement('span'); e.className = cls; e.textContent = text; return e; };
+  const row = (label: string, r: SpeedRes) => {
+    const d = document.createElement('div'); d.className = 'strow';
+    d.append(span('stlabel', label));
+    if (r.error) d.append(span('sterr', /not configured/.test(r.error) ? 'set COMPARE_API_KEY in .env' : r.error.slice(0, 42)));
+    else d.append(span('stms', `${r.ms}ms`), span('sttps', `${r.tps} tok/s`));
+    return d;
+  };
+  speedResult.replaceChildren(
+    row(`Cerebras · ${cb.model || 'gemma-4-31b'}`, cb),
+    row(`GPU · ${gpu.model || 'gpt-4o-mini'}`, gpu),
+  );
+  if (cb.ms && gpu.ms) {
+    const sum = document.createElement('div'); sum.className = 'stsum';
+    const thru = gpu.tps ? ((cb.tps || 0) / gpu.tps).toFixed(1) : '—';
+    sum.textContent = `Cerebras ${(gpu.ms / cb.ms).toFixed(1)}x faster · ${thru}x throughput`;
+    speedResult.append(sum);
+  }
+  speedBtn.disabled = false; speedBtn.textContent = 'Run speed test';
+}
+speedBtn.addEventListener('click', runSpeedTest);
 autoBtn.addEventListener('click', toggleAuto);
 saveBtn.addEventListener('click', (e) => { e.stopPropagation(); savePreset(); });   // stopProp so the save-opened panel survives the outside-click close
 folderBtn.addEventListener('click', (e) => { e.stopPropagation(); presetPanel.classList.toggle('show'); });
